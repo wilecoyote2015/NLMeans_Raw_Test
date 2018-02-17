@@ -22,6 +22,27 @@ def apply_nl_means(image, patch_size, h):
 
     return image_processed
 
+def get_balls_neighborhood(image, coordinates_center, patch_radius, num_balls_per_direction, pattern_size):
+    list_balls = []
+    list_center_pixels = []
+
+    # obtain indices for y and x direction
+    coordinates_min = coordinates_center - pattern_size * num_balls_per_direction
+    coordinates_max = coordinates_center + pattern_size * num_balls_per_direction + 1
+
+    nth_ball = 3
+    # todo: introduce step-size to only get the nth balls
+    for index_y in range(patch_radius, image.shape[0] - patch_radius, nth_ball):
+        for index_x in range(patch_radius, image.shape[1] - patch_radius, nth_ball):
+            coordinates_ball = np.asarray([index_y, index_x])
+            ball = get_ball_around_pixel(image, coordinates_ball, patch_radius)
+
+            list_balls.append(ball)
+            list_center_pixels.append(image[coordinates_ball[0],
+                                            coordinates_ball[1]])
+
+    return np.asarray(list_balls), np.asarray(list_center_pixels)
+
 def get_all_balls_image(image, patch_radius):
     """ Obtain array of shape (num_balls, patch_radius, patch_radius, num_colors) for balls,
         and array of shape (num_balls, num_colors) of center pixels
