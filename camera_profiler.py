@@ -32,14 +32,16 @@ class Profiler:
 
         return parameters_color_planes
 
-    def plot_datapoints(self, datapoints, parameters_color_plane, index_color_plane, output_dir_plots):
+    def plot_datapoints(self, datapoints, parameters_color_plane, index_color_plane, output_dir_plots,
+                        plot_function=True):
         plt.plot(datapoints['values'], datapoints['standard_deviations'], ".")
 
-        values_fit = np.linspace(0, np.amax(datapoints['values']), 500)
-        fit = self.function_conversion_sigma(values_fit,
-                                             parameters_color_plane['alpha'],
-                                             parameters_color_plane['beta'])
-        plt.plot(values_fit, fit, '-')
+        if plot_function:
+            values_fit = np.linspace(0, np.amax(datapoints['values']), 500)
+            fit = self.function_conversion_sigma(values_fit,
+                                                 parameters_color_plane['alpha'],
+                                                 parameters_color_plane['beta'])
+            plt.plot(values_fit, fit, '-')
 
         output_path = os.path.join(output_dir_plots, "{}.png".format(index_color_plane))
         plt.savefig(output_path)
