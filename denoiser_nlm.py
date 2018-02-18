@@ -29,15 +29,48 @@ class Denoiser:
             image_processed = np.zeros_like(image)
             for index_y in tqdm(range(self.patch_radius, image.shape[0] - self.patch_radius)):
                 for index_x in range(self.patch_radius, image.shape[1] - self.patch_radius):
-                    coordinates = np.asarray([index_y, index_x])
+                    coordinates_pixel = np.asarray([index_y, index_x])
 
-                    # obtain balls around pixel
-                    balls, pixels_center = self.get_balls_neighborhood(image,
-                                                                       coordinates)
+                    #### obtain balls around pixel
+                    list_balls = []
+                    list_center_pixels = []
 
-                    mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, coordinates)
+                    # obtain indices for y and x direction
+                    coordinates_min = coordinates_pixel - self.pattern_size * self.num_balls_per_direction
+                    coordinates_max = coordinates_pixel + self.pattern_size * self.num_balls_per_direction + 1
 
-                    image_processed[coordinates[0], coordinates[1]] = mean_pixel
+                    coordinates_balls_y = np.arange(coordinates_min[0], coordinates_max[0], self.pattern_size[0])
+                    coordinates_balls_x = np.arange(coordinates_min[1], coordinates_max[1], self.pattern_size[1])
+
+                    # delete coordinates that are out of bounds
+                    good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
+                                                     coordinates_balls_y - self.patch_radius > 0)
+                    good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
+                                                     coordinates_balls_x - self.patch_radius > 0)
+
+                    # # for boundary evaluation
+                    # max_length_y = num_balls_per_direction * pattern_size[0] + patch_radius
+                    # max_length_x = num_balls_per_direction * pattern_size[1] + patch_radius
+
+                    ### get all balls for all balls centers
+                    for index_ball_center_y in coordinates_balls_y[good_elements_y]:
+                        for index_ball_center_x in coordinates_balls_x[good_elements_x]:
+                            ####  get ball around pixel
+                            patch = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
+                                    index_ball_center_x - self.patch_radius:index_ball_center_x + self.patch_radius + 1]
+                            num_pixels_spatial = (self.patch_radius + 1) ** 2
+
+                            ball = np.divide(patch, num_pixels_spatial)  # todo: * sum only for testing!
+
+                            list_balls.append(ball)
+                            list_center_pixels.append(image[index_ball_center_y,
+                                                            index_ball_center_x])
+
+                    balls, pixels_center =  np.asarray(list_balls), np.asarray(list_center_pixels)
+
+                    mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, coordinates_pixel)
+
+                    image_processed[coordinates_pixel[0], coordinates_pixel[1]] = mean_pixel
 
         return image_processed
 
