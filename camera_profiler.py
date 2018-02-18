@@ -59,6 +59,7 @@ class Profiler:
     def get_std_dev_datapoints(self, color_plane):
 
         max_value = np.amax(color_plane)
+        min_value = np.amin(color_plane)
 
         # iterate over all patches and obtain standard deviation and mean value
         standard_deviations = []
@@ -72,7 +73,7 @@ class Profiler:
                 patch = self.get_patch_around_pixel(color_plane, index_y, index_x)
 
                 # only proceed if patch does not contain the max value of the plane, which would indicate clipping
-                if np.amax(patch) < max_value:
+                if np.amax(patch) < max_value and np.amin(patch) > min_value:  # todo: min or 0?
                     # todo: use more sophisticated algorithm from scipy
                     standard_deviation = restoration.estimate_sigma(patch)
                     mean = np.mean(patch)
