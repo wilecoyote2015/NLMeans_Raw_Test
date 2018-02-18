@@ -6,7 +6,7 @@ from denoiser_nlm import Denoiser
 import rawpy
 
 # settings
-num_cores = 1
+num_cores = 4
 patch_radius = 3
 # h = 0.000005  # for Nikon 2
 # h = 0.00008  # for Nikon 1
