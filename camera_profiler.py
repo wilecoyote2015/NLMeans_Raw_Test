@@ -4,36 +4,46 @@ import logging
 import rawpy
 from matplotlib import pyplot as plt
 from skimage import restoration
+from scipy.optimize import curve_fit
+import os, sys
 
 class Profiler:
     def __init__(self, patch_radius, num_cores=4):
         self.patch_radius = patch_radius
         self.num_cores = num_cores
 
-    def profile_camera(self, filepath):
+    def profile_camera(self, filepath_input, output_dir_plots):
         # open image
-        image_raw = rawpy.imread(filepath)
+        image_raw = rawpy.imread(filepath_input)
 
         # construct the color planes
         color_planes = self.get_color_planes(image_raw)
 
-        parameters_color_planes = []
+        parameters_color_planes = {}
         for index_color_plane, color_plane in color_planes.items():
             # obtain the datapoints for patches; std. dev against mean
             datapoints = self.get_std_dev_datapoints(color_plane)
 
-            self.plot_datapoints(datapoints)
-
             # fit the function
             parameters_color_plane = self.fit_std_dev(datapoints)
-            parameters_color_planes.append(parameters_color_plane)
+            parameters_color_planes[index_color_plane] = parameters_color_plane
 
-        # todo: irgendwie so zurueckgeben, dass man die parameter der color con rawpy zuordnen kann. am besten per dict.
+            self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane, output_dir_plots)
+
         return parameters_color_planes
 
-    def plot_datapoints(self, datapoints):
+    def plot_datapoints(self, datapoints, parameters_color_plane, index_color_plane, output_dir_plots):
         plt.plot(datapoints['values'], datapoints['standard_deviations'], ".")
-        plt.show()
+
+        values_fit = np.linspace(0, np.amax(datapoints['values']), 500)
+        fit = self.function_conversion_sigma(values_fit,
+                                             parameters_color_plane['alpha'],
+                                             parameters_color_plane['beta'])
+        plt.plot(values_fit, fit, '-')
+
+        output_path = os.path.join(output_dir_plots, "{}.png".format(index_color_plane))
+        plt.savefig(output_path)
+        plt.close()
 
 
     def get_color_planes(self, image_raw):
@@ -91,8 +101,17 @@ class Profiler:
         return image[index_y - self.patch_radius:index_y + self.patch_radius + 1,
                      index_x - self.patch_radius:index_x + self.patch_radius + 1]
 
+    def fit_std_dev(self, datapoints):
+        parameters, covariances = curve_fit(self.function_conversion_sigma,
+                                            datapoints['values'],
+                                            datapoints['standard_deviations'])
+        return {'alpha': parameters[0],
+                'beta': parameters[1]}
 
+    def function_conversion_sigma(self, mean_measured, scale_alpha, shift_beta):
+        sigma_measured = np.sqrt(np.maximum(scale_alpha * (mean_measured - shift_beta), 0))  # np.max to prevent negative
 
+        return sigma_measured
 
 
 
