@@ -2,12 +2,12 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 import logging
-from denoiser_nlm import Denoiser
 import rawpy
+from denoiser_nlm import Denoiser
 
 # settings
 num_cores = 4
-patch_radius = 3
+patch_radius = 4
 # h = 0.000005  # for Nikon 2
 # h = 0.00008  # for Nikon 1
 # h = 0.000008  # for Fuji
@@ -15,7 +15,7 @@ h = 0.0000005  # for Fuji Dpreview
 num_balls_per_direction = 7
 
 
-slice_width = 150
+slice_width = 500
 slice_center_x = 900
 slice_center_y = 2700
 
