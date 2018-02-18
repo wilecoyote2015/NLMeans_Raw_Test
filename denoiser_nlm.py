@@ -8,14 +8,17 @@ from copy import deepcopy
 from common_functions import ascombe_transform_scale, inverse_ascombe_transform_scale
 
 class Denoiser:
-    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size, path_profile_camera, num_cores=4):
+    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size=None, path_profile_camera=None, num_cores=4):
         self.patch_radius = patch_radius
         self.h = h
         self.num_balls_per_direction = num_balls_per_direction
         self.pattern_size = pattern_size
         self.num_cores = num_cores
 
-        self.parameters_camera = self.get_camera_parameters(path_profile_camera)
+        if path_profile_camera is not None:
+            self.parameters_camera = self.get_camera_parameters(path_profile_camera)
+        else:
+            self.parameters_camera = None
 
     def filter_image(self, image_raw, slice_denoise=None):
         # store old pattern size
