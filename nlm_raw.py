@@ -6,7 +6,8 @@ from denoiser_nlm import Denoiser
 import rawpy
 
 # settings
-patch_size = 7
+num_cores = 1
+patch_radius = 3
 # h = 0.000005  # for Nikon 2
 # h = 0.00008  # for Nikon 1
 # h = 0.000008  # for Fuji
@@ -14,7 +15,7 @@ h = 0.0000005  # for Fuji Dpreview
 num_balls_per_direction = 7
 
 
-slice_width = 600
+slice_width = 150
 slice_center_x = 900
 slice_center_y = 2700
 
@@ -54,8 +55,8 @@ data_to_denoise[np.isnan(data_to_denoise)] = 0.
 
 # perform nl means
 pattern_size = np.asarray(image_raw.raw_pattern.shape)
-denoiser = Denoiser(pattern_size, h, num_balls_per_direction, pattern_size)
-data_processed = denoiser.apply_nl_means(data_to_denoise, patch_size, h, num_balls_per_direction, pattern_size)
+denoiser = Denoiser(patch_radius, h, num_balls_per_direction, pattern_size, num_cores=num_cores)
+data_processed = denoiser.apply_nl_means(data_to_denoise)
 
 # rescale data
 # data_processed *= np.sqrt(max) * np.sqrt(data_processed)
