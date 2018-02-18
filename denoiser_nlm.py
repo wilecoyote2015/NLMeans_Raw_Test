@@ -3,14 +3,74 @@ import numpy as np
 from tqdm import tqdm
 from pathos.multiprocessing import Pool
 import logging
+from csv import DictReader
+from copy import deepcopy
+from common_functions import ascombe_transform_scale, inverse_ascombe_transform_scale
 
 class Denoiser:
-    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size, num_cores=4):
+    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size, path_profile_camera, num_cores=4):
         self.patch_radius = patch_radius
         self.h = h
         self.num_balls_per_direction = num_balls_per_direction
         self.pattern_size = pattern_size
         self.num_cores = num_cores
+
+        self.parameters_camera = self.get_camera_parameters(path_profile_camera)
+
+    def filter_image(self, image_raw, slice_denoise=None):
+        # store old pattern size
+        pattern_size_old = deepcopy(self.pattern_size)
+
+        # set new pattern size
+        self.pattern_size = np.asarray(image_raw.raw_pattern.shape)
+
+        # copy the image
+        image_raw = deepcopy(image_raw)
+        image_data = image_raw.raw_image
+
+        # transform the data to zero variance
+        image_data_transformed = self.ascombe_transform_data(image_data, image_raw)
+
+        # perform nl means
+        if slice_denoise is not None:
+            data_to_filter = image_data_transformed[slice_denoise]
+        else:
+            data_to_filter = image_data_transformed
+
+        image_data_filtered = self.apply_nl_means(image_data)
+
+        if slice_denoise is not None:
+            image_data_transformed[slice_denoise] = image_data_filtered
+
+        # re-transform image data
+        image_data_filtered_backtransformed = self.ascombe_transform_data(image_data, image_raw, inverse=True)
+
+        # write filtered data into image
+        image_raw.raw_image[...] = image_data_filtered_backtransformed
+
+        # reset patter size
+        self.pattern_size = pattern_size_old
+
+        return image_raw
+
+    def ascombe_transform_data(self, image_data, image_raw, inverse=False):
+        raw_pattern = image_raw.raw_pattern
+        color_indices = image_raw.raw_colors
+        image_data_transformed = np.zeros_like(image_data)
+        for color_index in raw_pattern.flatten():
+            alpha = self.parameters_camera[color_index]['alpha']
+            beta = self.parameters_camera[color_index]['beta']
+            pixels_color = [color_indices == color_index]
+            if inverse:
+                image_data_transformed[pixels_color] = inverse_ascombe_transform_scale(image_data[pixels_color],
+                                                                               alpha,
+                                                                               beta)
+            else:
+                image_data_transformed[pixels_color] = ascombe_transform_scale(image_data[pixels_color],
+                                                                   alpha,
+                                                                   beta)
+
+        return image_data_transformed
 
     def apply_nl_means(self, image):
         # get all patches to evaluate
@@ -232,6 +292,16 @@ class Denoiser:
                                                 coordinates_ball[1]])
 
         return np.asarray(list_balls), np.asarray(list_center_pixels)
+
+    def get_camera_parameters(self, path_profile_camera):
+        parameters = {}
+        with open(path_profile_camera) as csvfile:
+            reader = DictReader(csvfile)
+            for row in reader:
+                parameters[int(row['color_plane'])] = {'alpha': float(row['alpha']),
+                                                       'beta': float(row['beta'])}
+
+        return parameters
 
     # def get_all_balls_image(self, image, patch_radius):
     #     """ Obtain array of shape (num_balls, patch_radius, patch_radius, num_colors) for balls,
