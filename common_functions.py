@@ -4,7 +4,7 @@ def ascombe_transform(value):
     return 2 * np.sqrt(value + 3/8)
 
 def inverse_ascombe_transform(value):
-    term_1 = value / 4
+    term_1 = np.power(value, 2) / 4
     term_2 = 1 / 8
     term_3 = np.sqrt(3/2) / (value * 4)
     term_4 = 11 / 8 * np.power(value, -2)
