@@ -5,7 +5,9 @@ import rawpy
 from matplotlib import pyplot as plt
 from skimage import restoration
 from scipy.optimize import curve_fit
+from common_functions import ascombe_transform_scale
 import os, sys
+from csv import DictWriter
 
 class Profiler:
     def __init__(self, patch_radius, num_cores=4):
@@ -28,11 +30,19 @@ class Profiler:
             parameters_color_plane = self.fit_std_dev(datapoints)
             parameters_color_planes[index_color_plane] = parameters_color_plane
 
-            self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane, output_dir_plots)
+            self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane, output_dir_plots, "{}.png")
+
+            # transform and plot result
+            plane_transformed = ascombe_transform_scale(color_plane,
+                                                        parameters_color_plane['alpha'],
+                                                        parameters_color_plane['beta'])
+            datapoints = self.get_std_dev_datapoints(plane_transformed)
+            self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane,
+                                 output_dir_plots, "{}_transformed.png",  plot_function=False)
 
         return parameters_color_planes
 
-    def plot_datapoints(self, datapoints, parameters_color_plane, index_color_plane, output_dir_plots,
+    def plot_datapoints(self, datapoints, parameters_color_plane, index_color_plane, output_dir_plots, name_pattern,
                         plot_function=True):
         plt.plot(datapoints['values'], datapoints['standard_deviations'], ".")
 
@@ -43,7 +53,7 @@ class Profiler:
                                                  parameters_color_plane['beta'])
             plt.plot(values_fit, fit, '-')
 
-        output_path = os.path.join(output_dir_plots, "{}.png".format(index_color_plane))
+        output_path = os.path.join(output_dir_plots, name_pattern.format(index_color_plane))
         plt.savefig(output_path)
         plt.close()
 
@@ -115,5 +125,14 @@ class Profiler:
 
         return sigma_measured
 
+    def save_parameters(self, parameters, output_file):
+        with open(output_file, 'w') as csvfile:
+            fieldnames = ['color_plane', 'alpha', 'beta']
+            writer = DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
 
-
+            for index_color_plane, parameters_color_plane in parameters.items():
+                row_dict = {'color_plane': index_color_plane,
+                            'alpha': parameters_color_plane['alpha'],
+                            'beta': parameters_color_plane['beta']}
+                writer.writerow(row_dict)
