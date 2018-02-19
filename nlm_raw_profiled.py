@@ -15,7 +15,7 @@ h = 0.2  # for Fuji Dpreview
 num_balls_per_direction = 7
 
 
-slice_width = 700
+slice_width = 100
 slice_center_x = 1500
 slice_center_y = 1000
 
@@ -33,7 +33,7 @@ path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_2.RAF"
 # path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/result_fuji_2.png"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Nikon_1_Profiled.RAF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Nikon_2_profiled.png"
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Nikon_2_profiled_test.png"
 path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40.csv"
 
 image_raw = rawpy.imread(path_input)
