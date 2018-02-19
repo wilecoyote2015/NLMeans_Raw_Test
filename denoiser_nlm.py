@@ -90,8 +90,12 @@ class Denoiser:
                 data.append({'image': image,
                              'index_y': index_y})
 
-            images_results = self.map_function_with_tqdm_multiprocessing_to_list(self.apply_nl_means_row, data, 4)
-            image_processed = np.sum(np.asarray(images_results), axis=0)
+            rows_filtered = self.map_function_with_tqdm_multiprocessing_to_list(self.apply_nl_means_row, data, 4)
+
+            image_processed = np.zeros_like(image)
+            for row in rows_filtered:
+                image_processed[row['index_y']] = row['data']
+            # image_processed = np.sum(np.asarray(images_results), axis=0)
         else:
             image_processed = np.zeros_like(image)
             for index_y in tqdm(range(self.patch_radius, image.shape[0] - self.patch_radius)):
@@ -144,7 +148,7 @@ class Denoiser:
     def apply_nl_means_row(self, data):
         image = data['image']
         index_y = data['index_y']
-        image_processed = np.zeros_like(image)
+        row_processed = np.zeros(image.shape[1])
 
         num_pixels_patch_spatial = (self.patch_radius + 1) ** 2
 
@@ -168,10 +172,6 @@ class Denoiser:
             good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
                                              coordinates_balls_x - self.patch_radius > 0)
 
-            # # for boundary evaluation
-            # max_length_y = num_balls_per_direction * pattern_size[0] + patch_radius
-            # max_length_x = num_balls_per_direction * pattern_size[1] + patch_radius
-
             ### get all balls for all balls centers
             for index_ball_center_y in coordinates_balls_y[good_elements_y]:
                 for index_ball_center_x in coordinates_balls_x[good_elements_x]:
@@ -188,9 +188,10 @@ class Denoiser:
 
             mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, coordinates_pixel)
 
-            image_processed[coordinates_pixel[0], coordinates_pixel[1]] = mean_pixel
+            row_processed[index_x] = mean_pixel
 
-        return image_processed
+        return {'index_y': index_y,
+                'data': row_processed}
 
     def map_function_with_tqdm_multiprocessing_to_list(self, function, data_to_process, num_cores):
         """ Process a function via multiprocessing and write the result into a list by merging the results returned by the
