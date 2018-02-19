@@ -152,31 +152,49 @@ class Denoiser:
 
         num_pixels_patch_spatial = (self.patch_radius + 1) ** 2
 
-        for index_x in range(self.patch_radius, image.shape[1] - self.patch_radius):
-            coordinates_pixel = np.asarray([index_y, index_x])
+        y_min = index_y - self.pattern_size[0] * self.num_balls_per_direction
+        y_max = index_y + self.pattern_size[0] * self.num_balls_per_direction + 1
+        coordinates_balls_y = np.arange(y_min, y_max, self.pattern_size[0])
+        good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
+                                         coordinates_balls_y - self.patch_radius > 0)
+        coordinates_balls_y = coordinates_balls_y[good_elements_y]
 
+        for index_x in range(self.patch_radius, image.shape[1] - self.patch_radius):
             #### obtain balls around pixel
             list_balls = []
             list_center_pixels = []
 
             # obtain indices for y and x direction
-            coordinates_min = coordinates_pixel - self.pattern_size * self.num_balls_per_direction
-            coordinates_max = coordinates_pixel + self.pattern_size * self.num_balls_per_direction + 1
+            x_min = index_x - self.pattern_size[1] * self.num_balls_per_direction
+            x_max = index_x + self.pattern_size[1] * self.num_balls_per_direction + 1
 
-            coordinates_balls_y = np.arange(coordinates_min[0], coordinates_max[0], self.pattern_size[0])
-            coordinates_balls_x = np.arange(coordinates_min[1], coordinates_max[1], self.pattern_size[1])
+            coordinates_balls_x = np.arange(x_min, x_max, self.pattern_size[1])
 
             # delete coordinates that are out of bounds
-            good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
-                                             coordinates_balls_y - self.patch_radius > 0)
             good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
                                              coordinates_balls_x - self.patch_radius > 0)
 
+            coordinates_balls_x = coordinates_balls_x[good_elements_x]
+
+            # coordinate_array = np.meshgrid(coordinates_balls_y[good_elements_y],
+            #                                coordinates_balls_x[good_elements_x])
+
+            # for index_ball_center_y, index_ball_center_x in np.nditer(coordinate_array):
+            #     ####  get ball around pixel
+            #     ball = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
+            #            index_ball_center_x - self.patch_radius:index_ball_center_x + self.patch_radius + 1]
+            #
+            #     list_balls.append(ball)
+            #     list_center_pixels.append(image[index_ball_center_y,
+            #                                     index_ball_center_x])
+
             ### get all balls for all balls centers
-            for index_ball_center_y in coordinates_balls_y[good_elements_y]:
-                for index_ball_center_x in coordinates_balls_x[good_elements_x]:
+            for index_ball_center_y in coordinates_balls_y:
+                min_y = index_ball_center_y - self.patch_radius
+                max_y = index_ball_center_y + self.patch_radius + 1
+                for index_ball_center_x in coordinates_balls_x:
                     ####  get ball around pixel
-                    ball = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
+                    ball = image[min_y:max_y,
                             index_ball_center_x - self.patch_radius:index_ball_center_x + self.patch_radius + 1]
 
                     list_balls.append(ball)
@@ -186,7 +204,7 @@ class Denoiser:
             balls = np.asarray(list_balls) / num_pixels_patch_spatial
             pixels_center = np.asarray(list_center_pixels)
 
-            mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, coordinates_pixel)
+            mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, [index_y, index_x])
 
             row_processed[index_x] = mean_pixel
 
