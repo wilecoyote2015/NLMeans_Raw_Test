@@ -176,11 +176,8 @@ class Denoiser:
             for index_ball_center_y in coordinates_balls_y[good_elements_y]:
                 for index_ball_center_x in coordinates_balls_x[good_elements_x]:
                     ####  get ball around pixel
-                    patch = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
+                    ball = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
                             index_ball_center_x - self.patch_radius:index_ball_center_x + self.patch_radius + 1]
-
-
-                    ball = np.divide(patch, num_pixels_patch_spatial)  # todo: * sum only for testing!
 
                     list_balls.append(ball)
                     list_center_pixels.append(image[index_ball_center_y,
