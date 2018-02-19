@@ -28,11 +28,15 @@ class Denoiser:
         self.pattern_size = np.asarray(image_raw.raw_pattern.shape)
 
         # copy the image
-        image_raw = deepcopy(image_raw)
+        # image_raw = deepcopy(image_raw) # todo: not possible...
         image_data = image_raw.raw_image
 
+        # clean NANs
+        image_data[np.isnan(image_data)] = 0.
+
         # transform the data to zero variance
-        image_data_transformed = self.ascombe_transform_data(image_data, image_raw)
+        image_data_transformed = self.ascombe_transform_data(image_data.astype(np.float32),
+                                                             image_raw)
 
         # perform nl means
         if slice_denoise is not None:
@@ -40,16 +44,16 @@ class Denoiser:
         else:
             data_to_filter = image_data_transformed
 
-        image_data_filtered = self.apply_nl_means(image_data)
+        image_data_filtered = self.apply_nl_means(data_to_filter)
 
         if slice_denoise is not None:
             image_data_transformed[slice_denoise] = image_data_filtered
 
         # re-transform image data
-        image_data_filtered_backtransformed = self.ascombe_transform_data(image_data, image_raw, inverse=True)
+        image_data_filtered_backtransformed = self.ascombe_transform_data(image_data_transformed, image_raw, inverse=True)
 
         # write filtered data into image
-        image_raw.raw_image[...] = image_data_filtered_backtransformed
+        image_raw.raw_image[...] = image_data_filtered_backtransformed.astype(np.uint16)
 
         # reset patter size
         self.pattern_size = pattern_size_old
