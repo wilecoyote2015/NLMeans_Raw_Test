@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 from tqdm import tqdm
 from pathos.multiprocessing import Pool
@@ -9,6 +8,16 @@ from common_functions import ascombe_transform_scale, inverse_ascombe_transform_
 
 class Denoiser:
     def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size=None, path_profile_camera=None, num_cores=4):
+        """
+
+        :param patch_radius:
+        :param h:
+        :param num_balls_per_direction: Number of patches to search around each pixel in each direction (l, r, u, d)
+            number of patches generated will be (2 * num_balls_per_direction)**2
+        :param pattern_size:
+        :param path_profile_camera:
+        :param num_cores:
+        """
         self.patch_radius = patch_radius
         self.h = h
         self.num_balls_per_direction = num_balls_per_direction
@@ -48,6 +57,8 @@ class Denoiser:
 
         if slice_denoise is not None:
             image_data_transformed[slice_denoise] = image_data_filtered
+        else:
+            image_data_transformed = image_data_filtered
 
         # re-transform image data
         image_data_filtered_backtransformed = self.ascombe_transform_data(image_data_transformed, image_raw, inverse=True)
@@ -84,64 +95,17 @@ class Denoiser:
         logging.info("Collecting all balls")
         # balls, pixels_center = get_all_balls_image(image, patch_radius)
 
-        if self.num_cores > 1:
-            data = []
-            for index_y in range(self.patch_radius, image.shape[0] - self.patch_radius):
-                data.append({'image': image,
-                             'index_y': index_y})
+        data = []
+        for index_y in range(self.patch_radius, image.shape[0] - self.patch_radius):
+            data.append({'image': image,
+                         'index_y': index_y})
 
-            rows_filtered = self.map_function_with_tqdm_multiprocessing_to_list(self.apply_nl_means_row, data, 4)
+        rows_filtered = self.map_function_with_tqdm_multiprocessing_to_list(self.apply_nl_means_row, data, 4)
 
-            image_processed = np.zeros_like(image)
-            for row in rows_filtered:
-                image_processed[row['index_y']] = row['data']
-            # image_processed = np.sum(np.asarray(images_results), axis=0)
-        else:
-            image_processed = np.zeros_like(image)
-            for index_y in tqdm(range(self.patch_radius, image.shape[0] - self.patch_radius)):
-                for index_x in range(self.patch_radius, image.shape[1] - self.patch_radius):
-                    coordinates_pixel = np.asarray([index_y, index_x])
-
-                    #### obtain balls around pixel
-                    list_balls = []
-                    list_center_pixels = []
-
-                    # obtain indices for y and x direction
-                    coordinates_min = coordinates_pixel - self.pattern_size * self.num_balls_per_direction
-                    coordinates_max = coordinates_pixel + self.pattern_size * self.num_balls_per_direction + 1
-
-                    coordinates_balls_y = np.arange(coordinates_min[0], coordinates_max[0], self.pattern_size[0])
-                    coordinates_balls_x = np.arange(coordinates_min[1], coordinates_max[1], self.pattern_size[1])
-
-                    # delete coordinates that are out of bounds
-                    good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
-                                                     coordinates_balls_y - self.patch_radius > 0)
-                    good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
-                                                     coordinates_balls_x - self.patch_radius > 0)
-
-                    # # for boundary evaluation
-                    # max_length_y = num_balls_per_direction * pattern_size[0] + patch_radius
-                    # max_length_x = num_balls_per_direction * pattern_size[1] + patch_radius
-
-                    ### get all balls for all balls centers
-                    for index_ball_center_y in coordinates_balls_y[good_elements_y]:
-                        for index_ball_center_x in coordinates_balls_x[good_elements_x]:
-                            ####  get ball around pixel
-                            patch = image[index_ball_center_y - self.patch_radius:index_ball_center_y + self.patch_radius + 1,
-                                    index_ball_center_x - self.patch_radius:index_ball_center_x + self.patch_radius + 1]
-                            num_pixels_spatial = (self.patch_radius + 1) ** 2
-
-                            ball = np.divide(patch, num_pixels_spatial)  # todo: * sum only for testing!
-
-                            list_balls.append(ball)
-                            list_center_pixels.append(image[index_ball_center_y,
-                                                            index_ball_center_x])
-
-                    balls, pixels_center =  np.asarray(list_balls), np.asarray(list_center_pixels)
-
-                    mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, coordinates_pixel)
-
-                    image_processed[coordinates_pixel[0], coordinates_pixel[1]] = mean_pixel
+        image_processed = np.zeros_like(image)
+        for row in rows_filtered:
+            image_processed[row['index_y']] = row['data']
+        # image_processed = np.sum(np.asarray(images_results), axis=0)
 
         return image_processed
 
@@ -279,46 +243,47 @@ class Denoiser:
 
         return mean
 
-    def get_balls_neighborhood(self, image, coordinates_center):
-        """
-
-        :param image:
-        :param coordinates_center:
-        :param patch_radius:
-        :param num_balls_per_direction:
-        :param pattern_size: np array, size of repeating pattern for each axis
-        :return:
-        """
-        list_balls = []
-        list_center_pixels = []
-
-        # obtain indices for y and x direction
-        coordinates_min = coordinates_center - self.pattern_size * self.num_balls_per_direction
-        coordinates_max = coordinates_center + self.pattern_size * self.num_balls_per_direction + 1
-
-        coordinates_balls_y = np.arange(coordinates_min[0], coordinates_max[0], self.pattern_size[0])
-        coordinates_balls_x = np.arange(coordinates_min[1], coordinates_max[1], self.pattern_size[1])
-
-        # delete coordinates that are out of bounds
-        good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
-                                         coordinates_balls_y - self.patch_radius > 0)
-        good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
-                                         coordinates_balls_x - self.patch_radius > 0)
-
-        # # for boundary evaluation
-        # max_length_y = num_balls_per_direction * pattern_size[0] + patch_radius
-        # max_length_x = num_balls_per_direction * pattern_size[1] + patch_radius
-
-        for index_y in coordinates_balls_y[good_elements_y]:
-            for index_x in coordinates_balls_x[good_elements_x]:
-                coordinates_ball = np.asarray([index_y, index_x])
-                ball = self.get_ball_around_pixel(image, coordinates_ball)
-
-                list_balls.append(ball)
-                list_center_pixels.append(image[coordinates_ball[0],
-                                                coordinates_ball[1]])
-
-        return np.asarray(list_balls), np.asarray(list_center_pixels)
+    #  implemented inline for performance
+    # def get_balls_neighborhood(self, image, coordinates_center):
+    #     """
+    #
+    #     :param image:
+    #     :param coordinates_center:
+    #     :param patch_radius:
+    #     :param num_balls_per_direction:
+    #     :param pattern_size: np array, size of repeating pattern for each axis
+    #     :return:
+    #     """
+    #     list_balls = []
+    #     list_center_pixels = []
+    #
+    #     # obtain indices for y and x direction
+    #     coordinates_min = coordinates_center - self.pattern_size * self.num_balls_per_direction
+    #     coordinates_max = coordinates_center + self.pattern_size * self.num_balls_per_direction + 1
+    #
+    #     coordinates_balls_y = np.arange(coordinates_min[0], coordinates_max[0], self.pattern_size[0])
+    #     coordinates_balls_x = np.arange(coordinates_min[1], coordinates_max[1], self.pattern_size[1])
+    #
+    #     # delete coordinates that are out of bounds
+    #     good_elements_y = np.logical_and(coordinates_balls_y + self.patch_radius < image.shape[0],
+    #                                      coordinates_balls_y - self.patch_radius > 0)
+    #     good_elements_x = np.logical_and(coordinates_balls_x + self.patch_radius < image.shape[1],
+    #                                      coordinates_balls_x - self.patch_radius > 0)
+    #
+    #     # # for boundary evaluation
+    #     # max_length_y = num_balls_per_direction * pattern_size[0] + patch_radius
+    #     # max_length_x = num_balls_per_direction * pattern_size[1] + patch_radius
+    #
+    #     for index_y in coordinates_balls_y[good_elements_y]:
+    #         for index_x in coordinates_balls_x[good_elements_x]:
+    #             coordinates_ball = np.asarray([index_y, index_x])
+    #             ball = self.get_ball_around_pixel(image, coordinates_ball)
+    #
+    #             list_balls.append(ball)
+    #             list_center_pixels.append(image[coordinates_ball[0],
+    #                                             coordinates_ball[1]])
+    #
+    #     return np.asarray(list_balls), np.asarray(list_center_pixels)
 
     def get_camera_parameters(self, path_profile_camera):
         parameters = {}
