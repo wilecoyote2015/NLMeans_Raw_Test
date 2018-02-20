@@ -7,7 +7,8 @@ from copy import deepcopy
 from common_functions import ascombe_transform_scale, inverse_ascombe_transform_scale
 
 class Denoiser:
-    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size=None, path_profile_camera=None, num_cores=4):
+    def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size=None, path_profile_camera=None,
+                 num_cores=4, rotate_patches=False):
         """
 
         :param patch_radius:
@@ -23,6 +24,7 @@ class Denoiser:
         self.num_balls_per_direction = num_balls_per_direction
         self.pattern_size = pattern_size
         self.num_cores = num_cores
+        self.rotate_patches = rotate_patches
 
         if path_profile_camera is not None:
             self.parameters_camera = self.get_camera_parameters(path_profile_camera)
@@ -166,8 +168,12 @@ class Denoiser:
                                                     index_ball_center_x])
 
             balls = np.asarray(list_balls) / num_pixels_patch_spatial
-            pixels_center = np.asarray(list_center_pixels)
-
+            if self.rotate_patches:
+                # append all possible rotations of patches in order to get some rotational invariance
+                balls = np.concatenate([np.rot90(balls, k=num_rotations, axes=(1, 2)) for num_rotations in range(4)])
+                pixels_center = np.asarray(list_center_pixels*4)
+            else:
+                pixels_center = np.asarray(list_center_pixels)
             mean_pixel = self.get_mean_for_pixel(image, balls, pixels_center, [index_y, index_x])
 
             row_processed[index_x] = mean_pixel
