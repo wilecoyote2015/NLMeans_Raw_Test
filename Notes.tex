@@ -1,0 +1,102 @@
+\documentclass[]{article}
+\usepackage{amsmath}
+\begin{document}
+\section{Camera Profiling}
+\subsection{Obtaining the conversion parameters}
+\begin{itemize}
+	\item Values $y$ in RAW files aren't directly poisson distributed with variance $y$. Assume that observation $y$ is generated from Poisson distributed signal $c$ according to
+	\begin{align}
+		y = \alpha c + \beta,
+	\end{align}
+	with scale factor $\alpha$ and offset $\beta$.
+	\item Counts $c$ of real value $x$ are noisy according to Poisson statistics $\mathcal{P}$:
+	\begin{align}
+		c = \mathcal{P}(x)
+	\end{align}
+	\item $x$ is expectation value
+	\item Standard deviation $\sigma$ of Poisson is square-root of expectation value:
+	\begin{align}
+		\sigma = \sqrt{x}
+	\end{align}
+	\item Thus:
+	\begin{align}
+		y = \alpha \mathcal{P}(x) + b\\
+		\Leftrightarrow \frac{y - \beta}{\alpha} = \mathcal{P}(x) 
+	\end{align}
+	\item Expectation value $m$ of mean for measurement $y$ over a flat patch with identical expectation values $x$:
+	\begin{align}
+		m &= \alpha x + \beta \\
+		x &= \frac{m - \beta}{\alpha} 
+	\end{align}
+	\item Measured standard deviation $\sigma'$ :
+	\begin{align}
+		\sigma' = \alpha \sigma = \alpha \sqrt{x}
+	\end{align}
+	\item It follows:
+	\begin{align}
+		\Rightarrow \sigma' &= \alpha \sqrt{\frac{m - \beta}{\alpha}} = \sqrt{\alpha (m - \beta)}
+	\end{align}
+	\item Thus, the conversion parameters $\alpha, \beta$ can be estimated by fitting the measured standard deviation $\sigma'$ as a function of the measured mean $m$ according to:
+	\begin{align}
+		\sigma' = \sqrt{\alpha (m - \beta)}
+	\end{align}
+\end{itemize}
+\subsection{Transforming measurement to poisson-distributed counts}
+\begin{itemize}
+	\item The measured values $y$ can then be converted to counts with poisson-noise according to
+	\begin{align}
+		c = \frac{(y - \beta)}{a}
+	\end{align}
+	\item Back-Transform is according to above:
+	\begin{align}
+		y = \alpha c + \beta,
+	\end{align}
+\end{itemize}
+\subsection{Ascombe transformation}
+\begin{itemize}
+	\item Variance stabilization for transformed data $c$ using Anscombe tranform:
+	\begin{align}
+		\tilde{c} = 2 \sqrt{c + \frac{3}{8}}
+	\end{align}
+	\item After denoising, the denoised signal $\tilde{c}_d$ can be transformed back using
+	\begin{align}
+		c_d = \frac{\tilde{c}_d}{4} - \frac{1}{8} + \sqrt{\frac{3}{2}} \frac{\tilde{c}_d^{-1}}{4} - \frac{11}{8} \tilde{c}_d^{-2} + \frac{5}{8}\sqrt{\frac{3}{2}} \tilde{c}_d^{-3}
+	\end{align}
+\end{itemize}
+\subsection{Transformation from values}
+\begin{itemize}
+	\item Ascombe transformation, directly from measurement:
+	\begin{align}
+		\tilde{c} = 2 \sqrt{\frac{(y - b)}{a} + \frac{3}{8}}
+		\label{eq:Trafo}
+	\end{align}
+	\item Inverse Ascombe transformation directly to image values $y_d$:
+	\begin{align}
+		y_d = 
+		\alpha
+		\left(\frac{\tilde{c}_d}{4} - \frac{1}{8} + \sqrt{\frac{3}{2}} \frac{\tilde{c}_d^{-1}}{4} - \frac{11}{8} \tilde{c}_d^{-2} + \frac{5}{8}\sqrt{\frac{3}{2}} \tilde{c}_d^{-3}\right)
+		+ \beta
+	\end{align}
+\end{itemize}
+\section{NL Means}
+\begin{itemize}
+	\item Filter image $\vec{y}$, obtaining denoised Pixel $u_i$:
+	\begin{align}
+		u_i = \frac{\sum_{j\in \Omega_i} w_{ij} y_j}{\sum_{j\in \Omega} w_{ij}}
+		\label{eq:NLMeans}
+	\end{align}
+	\item $\Omega_i$: Group of pixels whose neighborhood is evaluated for non-local Mean of pixel $y_i$.
+	\item Weights $w_{ij}$ from patches $\vec{p}_i, \vec{p}_j$ around pixels $y_i, y_j$ according to
+	\begin{align}
+		e^{- \frac{||\vec{p}_i - \vec{p}_j||^2}{N h^2}},
+	\end{align}
+	with number of pixels $N$ in a patch.
+\end{itemize}
+\section{Application to RAW data}
+\begin{itemize}
+	\item For profiling, profile each color filter individually by concatenating the pixels in the RAW image with each filter to a respective sub-image that is profiled indicidually
+	\item Transform all pixels according to Equation \ref{eq:Trafo} with $\alpha, \beta$ for their respective color filter.
+	\item For filtering a pixel $y_i$ according to equation \ref{eq:NLMeans}, construct $\Omega_i$ only of pixels that have the same position in the repeating Bayer pattern.
+\end{itemize}
+
+\end{document}
