@@ -108,6 +108,11 @@ class Denoiser:
         return image_data_transformed
 
     def apply_nl_means(self, image):
+        """ Filter the image with non-local means
+
+        :param image: image data as numpy array
+        :return: filtered image
+        """
         # get all patches to evaluate
         logging.info("Calculating filtered image")
         # balls, pixels_center = get_all_balls_image(image, patch_radius)
@@ -209,6 +214,11 @@ class Denoiser:
         return result
 
     def get_camera_parameters(self, path_profile_camera):
+        """ Load photometric parameters from camera profile
+
+        :param path_profile_camera:
+        :return:
+        """
         parameters = {}
         with open(path_profile_camera) as csvfile:
             reader = DictReader(csvfile)

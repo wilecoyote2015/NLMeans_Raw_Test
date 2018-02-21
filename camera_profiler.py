@@ -12,7 +12,6 @@ from csv import DictWriter
 class Profiler:
     def __init__(self, patch_radius, num_cores=4):
         self.patch_radius = patch_radius
-        self.num_cores = num_cores
 
     def profile_camera(self, filepath_input, output_dir_plots):
         # open image
@@ -59,8 +58,13 @@ class Profiler:
 
 
     def get_color_planes(self, image_raw):
-        # obtain array with size of image, where each value corresponds to the index of the color matrix color;
-        # only visible area to prevent garbage data at borders
+        """ obtain array with size of image, where each value corresponds to the index of the color matrix color;
+            only visible area to prevent garbage data at borders
+
+        :param image_raw: rawpy raw image
+        :return: dict with rawpy color indices as keys and color planes as numpy arrays as values
+        """
+
 
         image = image_raw.raw_image_visible
         raw_pattern = image_raw.raw_pattern
@@ -95,8 +99,7 @@ class Profiler:
                 patch = self.get_patch_around_pixel(color_plane, index_y, index_x)
 
                 # only proceed if patch does not contain the max value of the plane, which would indicate clipping
-                if np.amax(patch) < max_value and np.amin(patch) > min_value:  # todo: min or 0?
-                    # todo: use more sophisticated algorithm from scipy
+                if np.amax(patch) < max_value and np.amin(patch) > min_value:
                     standard_deviation = restoration.estimate_sigma(patch)
                     mean = np.mean(patch)
 
@@ -107,9 +110,6 @@ class Profiler:
                 'values': values}
 
     def get_patch_around_pixel(self, image, index_y, index_x):
-        # coordinates_min = coordinates - patch_radius
-        # coordinates_max = coordinates + patch_radius + 1  # +1 because of np slicing
-
         return image[index_y - self.patch_radius:index_y + self.patch_radius + 1,
                      index_x - self.patch_radius:index_x + self.patch_radius + 1]
 
