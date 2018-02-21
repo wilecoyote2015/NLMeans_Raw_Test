@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from pathos.multiprocessing import Pool
+from multiprocessing import Pool
 import logging
 from csv import DictReader
 from copy import deepcopy
