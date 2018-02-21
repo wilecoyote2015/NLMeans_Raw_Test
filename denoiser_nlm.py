@@ -128,17 +128,42 @@ class Denoiser:
         image_filtered = np.zeros_like(image)
         sums_weights = np.zeros_like(image)
 
+        pool = Pool(processes=self.num_cores)
         for shift_y in tqdm(shifts_y):
+            data_multiprocessing = []
             for shift_x in shifts_x:
-                image_shifted = np.roll(image, [shift_y, shift_x], (0,1))
-                weights = self.calculate_weights(image, image_shifted)
+                data_multiprocessing.append({'image': image,
+                                             'shift_y': shift_y,
+                                             'shift_x': shift_x})
+
+
+            results_multiprocessing = pool.map(self.get_weights_column, data_multiprocessing)
+
+            for image_shifted, weights in results_multiprocessing:
                 sums_weights += weights
                 image_filtered += weights * image_shifted
+            #
+            #
+            # for shift_x in shifts_x:
+            #     image_shifted = np.roll(image, [shift_y, shift_x], (0,1))
+            #     weights = self.calculate_weights(image, image_shifted)
+            #     sums_weights += weights
+            #     image_filtered += weights * image_shifted
 
         # normalize weights
         image_filtered /= sums_weights
 
         return image_filtered
+
+    def get_weights_column(self, data):
+        shift_x = data['shift_x']
+        shift_y = data['shift_y']
+        image = data['image']
+        image_shifted = np.roll(image, [shift_y, shift_x], (0, 1))
+        weights = self.calculate_weights(image, image_shifted)
+
+        return image_shifted, weights
+
 
     def calculate_weights(self, image, image_shifted):
         square_differences = np.power(image - image_shifted, 2)
