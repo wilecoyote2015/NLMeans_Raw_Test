@@ -5,7 +5,7 @@ from denoiser_nlm import Denoiser
 
 # settings
 num_cores = 4
-patch_radius = 5
+patch_radius = 4
 # h = 0.000005  # for Nikon 2
 # h = 0.00008  # for Nikon 1
 # h = 0.000008  # for Fuji

@@ -19,6 +19,7 @@ class Denoiser:
         :param path_profile_camera:
         :param num_cores:
         """
+        # store some parameters in class just so that they can be attached easily in multiprocessing.
         self.patch_radius = patch_radius
         self.h = h
         self.num_balls_per_direction = num_balls_per_direction
@@ -32,6 +33,13 @@ class Denoiser:
             self.parameters_camera = None
 
     def filter_image(self, image_raw, slice_denoise=None):
+        """ Filter the image with pattern-aware NL means.
+
+        :param image_raw: a rawpy raw image
+        :param slice_denoise: an np slice object. Optional to define region of image to be filtered
+            for faster testing
+        :return:
+        """
         # store old pattern size
         pattern_size_old = deepcopy(self.pattern_size)
 
@@ -56,6 +64,7 @@ class Denoiser:
 
         image_data_filtered = self.apply_nl_means(data_to_filter)
 
+        # write filtered data into image
         if slice_denoise is not None:
             image_data_transformed[slice_denoise] = image_data_filtered
         else:
@@ -73,6 +82,13 @@ class Denoiser:
         return image_raw
 
     def ascombe_transform_data(self, image_data, image_raw, inverse=False):
+        """  Perform ascombe transform in order to stabilize variance
+
+        :param image_data:
+        :param image_raw:
+        :param inverse:
+        :return:
+        """
         raw_pattern = image_raw.raw_pattern
         color_indices = image_raw.raw_colors
         image_data_transformed = np.zeros_like(image_data)
