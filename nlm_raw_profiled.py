@@ -5,18 +5,18 @@ from denoiser_nlm import Denoiser
 
 # settings
 num_cores = 4
-patch_radius = 3
+patch_radius = 5
 # h = 0.000005  # for Nikon 2
 # h = 0.00008  # for Nikon 1
 # h = 0.000008  # for Fuji
-h = 0.2  # for Fuji Dpreview
-num_balls_per_direction = 5
+h = 1.1  # for Fuji Dpreview
+num_balls_per_direction = 10
 rotate_patches = True
 
 
-slice_width = 200
-slice_center_x = 700
-slice_center_y = 1500
+slice_width = 300
+slice_center_x = 900
+slice_center_y = 1300
 
 x_min = int (slice_center_x - slice_width/2)
 x_max = int (slice_center_x + slice_width/2)
@@ -30,12 +30,12 @@ slice_denoise = None
 # import image
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_3.NEF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_4.NEF"
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_1.NEF"
 # path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/result_nikon_1.png"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_2.RAF"
 # path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/result_fuji_2.png"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Nikon_1_Profiled.RAF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_4_full_inverse_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_1_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40.csv"
