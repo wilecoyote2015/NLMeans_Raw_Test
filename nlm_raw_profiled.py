@@ -14,9 +14,9 @@ num_balls_per_direction = 5
 rotate_patches = True
 
 
-slice_width = 100
-slice_center_x = 800
-slice_center_y = 1200
+slice_width = 200
+slice_center_x = 700
+slice_center_y = 1500
 
 x_min = int (slice_center_x - slice_width/2)
 x_max = int (slice_center_x + slice_width/2)
@@ -30,12 +30,12 @@ slice_denoise = None
 # import image
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_3.NEF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_1.NEF"
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_4.NEF"
 # path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/result_nikon_1.png"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_2.RAF"
 # path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/result_fuji_2.png"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Nikon_1_Profiled.RAF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_1_full_rotated_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_4_full_inverse_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40.csv"

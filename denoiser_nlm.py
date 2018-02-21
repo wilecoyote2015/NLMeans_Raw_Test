@@ -6,6 +6,9 @@ from csv import DictReader
 from copy import deepcopy
 from common_functions import ascombe_transform_scale, inverse_ascombe_transform_scale
 
+# todo: ganz andere berechnung, indem gar keine patches geholt werden, sondern einfach
+# ein zweites bild erstellt wird, das immer gerollt wird etc.
+
 class Denoiser:
     def __init__(self, patch_radius, h, num_balls_per_direction, pattern_size=None, path_profile_camera=None,
                  num_cores=4, rotate_patches=False):
