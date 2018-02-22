@@ -16,23 +16,53 @@ class Profiler:
         image_raw = rawpy.imread(filepath_input)
 
         # construct the color planes
-        color_planes = self.get_color_planes(image_raw)
+        color_planes_pseudo = self.get_color_planes_pseudo_indices(image_raw)
 
-        parameters_color_planes = {}
-        for index_color_plane, color_plane in color_planes.items():
+        # obtain the datapoints (std.dev vs. mean) for all pseudo-indiced color planes
+        datapoints_pseudo = {}
+        for index_color_plane, color_plane in color_planes_pseudo.items():
             # obtain the datapoints for patches; std. dev against mean
-            datapoints = self.get_std_dev_datapoints(color_plane)
+            datapoints_color_plane = self.get_std_dev_datapoints(color_plane)
+            datapoints_pseudo[index_color_plane] = datapoints_color_plane
 
+        # merge all datapoints of pseudo-color planes that belong to the same sensor color
+        mapping_color_indices = self.get_mapping_raw_pattern(image_raw)
+        datapoints_merged = {}
+        for index_pseudo_color, index_sensor_color in mapping_color_indices.items():
+            if index_sensor_color not in datapoints_merged:
+                datapoints_merged[index_sensor_color] = datapoints_pseudo[index_pseudo_color]
+            else:
+                datapoints_merged[index_sensor_color]['values'].extend(datapoints_pseudo[index_pseudo_color]['values'])
+                datapoints_merged[index_sensor_color]['standard_deviations'].extend(
+                    datapoints_pseudo[index_pseudo_color]['standard_deviations'])
+
+        # perform the fitting for the datapoints
+        parameters_color_planes = {}
+        for index_color_plane, datapoints_color_plane in datapoints_merged.items():
             # fit the function
-            parameters_color_plane = self.fit_std_dev(datapoints)
+            parameters_color_plane = self.fit_std_dev(datapoints_color_plane)
             parameters_color_planes[index_color_plane] = parameters_color_plane
 
-            self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane, output_dir_plots, "{}.png")
+            self.plot_datapoints(datapoints_color_plane,
+                                 parameters_color_plane,
+                                 index_color_plane,
+                                 output_dir_plots,
+                                 "{}.png")
+
+#       # plot results of variance stabilization
+        for index_color_plane, color_plane in color_planes_pseudo.items():
+            # index is index for pseudo color plane, but parameters are for real colors.
+            # find parameters of real color for the color plane
+            index_sensor_color = mapping_color_indices[index_color_plane]
+            parameters_color_plane = parameters_color_planes[index_sensor_color]
 
             # transform and plot result
             plane_transformed = ascombe_transform_scale(color_plane,
                                                         parameters_color_plane['alpha'],
                                                         parameters_color_plane['beta'])
+            # remove nans
+            plane_transformed[np.isnan(plane_transformed)] = 0
+
             datapoints = self.get_std_dev_datapoints(plane_transformed)
             self.plot_datapoints(datapoints, parameters_color_plane, index_color_plane,
                                  output_dir_plots, "{}_transformed.png",  plot_function=False)
@@ -55,7 +85,7 @@ class Profiler:
         plt.close()
 
 
-    def get_color_planes(self, image_raw):
+    def get_color_planes_pseudo_indices(self, image_raw):
         """ obtain array with size of image, where each value corresponds to the index of the color matrix color;
             only visible area to prevent garbage data at borders
 
@@ -65,20 +95,52 @@ class Profiler:
 
 
         image = image_raw.raw_image_visible
+        raw_pattern_pseudo_indices = self.get_raw_pattern_unique(image_raw)
         raw_pattern = image_raw.raw_pattern
 
         # trim the image so that pattern repeats completely in all axes
-        shape_planes = np.floor((np.asarray(image.shape) / np.asarray(raw_pattern.shape))).astype(np.int)
-        shape_image_trimmed = shape_planes * np.asarray(raw_pattern.shape)
+        shape_planes = np.floor((np.asarray(image.shape) / np.asarray(raw_pattern_pseudo_indices.shape))).astype(np.int)
+        shape_image_trimmed = shape_planes * np.asarray(raw_pattern_pseudo_indices.shape)
         image_trimmed = image[0:shape_image_trimmed[0], 0:shape_image_trimmed[1]]
-        color_indices_trimmed = image_raw.raw_colors_visible[0:shape_image_trimmed[0], 0:shape_image_trimmed[1]]
+
+        # build pseudo-color-indices image
+        padding = shape_image_trimmed - np.asarray(raw_pattern_pseudo_indices.shape)
+
+        color_indices_pseudo = np.pad(raw_pattern_pseudo_indices,[(0, padding[0]), (0, padding[1])], 'wrap')
 
         color_planes = {}
-        for color_index in raw_pattern.flatten():
-            pixels_color = image_trimmed[color_indices_trimmed == color_index]
+        for color_index in raw_pattern_pseudo_indices.flatten():
+            pixels_color = image_trimmed[color_indices_pseudo == color_index]
             color_planes[color_index] = pixels_color.reshape(shape_planes)
 
         return color_planes
+
+    def get_raw_pattern_unique(self, image_raw):
+        """ Obtain raw pattern with upcounting pseudo color-indices
+
+        :param image_raw:
+        :return:
+        """
+        raw_pattern = image_raw.raw_pattern
+        indices = np.arange(0, raw_pattern.size)
+
+        return np.reshape(indices, raw_pattern.shape)
+
+    def get_mapping_raw_pattern(self, image_raw):
+        """ Obtain mapping from pseudo-indices to indices
+
+        :param image_raw:
+        :return:
+        """
+
+        raw_pattern = image_raw.raw_pattern
+        raw_pattern_pseudo = self.get_raw_pattern_unique(image_raw)
+
+        mapping = {}
+        for index_raw, index_pseudo in zip(raw_pattern.flatten(), raw_pattern_pseudo.flatten()):
+            mapping[index_pseudo] = index_raw
+
+        return mapping
 
     def get_std_dev_datapoints(self, color_plane):
 
