@@ -96,7 +96,6 @@ class Profiler:
 
         image = image_raw.raw_image_visible
         raw_pattern_pseudo_indices = self.get_raw_pattern_unique(image_raw)
-        raw_pattern = image_raw.raw_pattern
 
         # trim the image so that pattern repeats completely in all axes
         shape_planes = np.floor((np.asarray(image.shape) / np.asarray(raw_pattern_pseudo_indices.shape))).astype(np.int)
@@ -105,7 +104,6 @@ class Profiler:
 
         # build pseudo-color-indices image
         padding = shape_image_trimmed - np.asarray(raw_pattern_pseudo_indices.shape)
-
         color_indices_pseudo = np.pad(raw_pattern_pseudo_indices,[(0, padding[0]), (0, padding[1])], 'wrap')
 
         color_planes = {}
