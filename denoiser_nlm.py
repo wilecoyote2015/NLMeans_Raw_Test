@@ -188,7 +188,7 @@ class Denoiser:
 
         distances = np.zeros_like(square_differences)
         for shift_x in shifts:
-            shifted_x = np.roll(square_differences, shift_x, 0)
+            shifted_x = np.roll(square_differences, shift_x, 1)
             for shift_y in shifts:
                 if shift_y != 0:
                     distances[shift_y:] += shifted_x[:-shift_y]
