@@ -27,8 +27,9 @@ slice_denoise = np.s_[y_min:y_max, x_min:x_max]
 slice_denoise = None  #  comment this line to use slice instead of filtering of whole image
 
 # paths to input raw image and desired output
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_1.NEF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_1_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
+# path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Olympus_1600.ORF"
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_2_full_linear_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 # path to the camera profile generated with profile_camera.py
@@ -43,6 +44,9 @@ denoiser = Denoiser(patch_radius, h, num_balls_per_direction, path_profile_camer
 denoiser.filter_image(image_raw, slice_denoise)
 
 # demosaic and save image
-image_processed = image_raw.postprocess(output_bps=8, use_auto_wb=True,
+image_processed = image_raw.postprocess(output_bps=16, use_auto_wb=True,
+                                        # user_wb=(1,1,1,1),
+                                        no_auto_bright=True,
+                                        no_auto_scale=False,
                                         demosaic_algorithm=rawpy.DemosaicAlgorithm.AMAZE)
 cv2.imwrite(path_output, np.flip(image_processed, axis=2))
