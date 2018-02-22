@@ -187,14 +187,14 @@ class Denoiser:
         shifts = np.arange(- self.patch_radius, self.patch_radius+1, step=1, dtype=np.int)
 
         distances = np.zeros_like(square_differences)
-        for shift_y in shifts:
-            shifted_y = np.roll(square_differences, shift_y, 0)
-            for shift_x in shifts:
-                if shift_x != 0:
-                    distances[:,shift_x:] += shifted_y[:,:-shift_x]
-                    distances[:,:shift_x] += shifted_y[:,-shift_x:]
+        for shift_x in shifts:
+            shifted_x = np.roll(square_differences, shift_x, 0)
+            for shift_y in shifts:
+                if shift_y != 0:
+                    distances[shift_y:] += shifted_x[:-shift_y]
+                    distances[:shift_y] += shifted_x[-shift_y:]
                 else:
-                    distances += shifted_y
+                    distances += shifted_x
 
         # normalize by division by patch pixel count
         distances /= (2*self.patch_radius + 1)**2
