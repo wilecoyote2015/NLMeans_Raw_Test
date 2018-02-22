@@ -4,7 +4,7 @@ import rawpy
 from denoiser_nlm import Denoiser
 
 # settings
-num_cores = 4  # cores for multiprocessing
+num_cores = 1  # cores for multiprocessing
 patch_radius = 4  # radius of patches. patch width is 2*radius+1
 h = 1.1  # Scale parameter for exponential weight from patch distance. Higher value corresponds to smoother image.
 rotate_patches = True  # not used

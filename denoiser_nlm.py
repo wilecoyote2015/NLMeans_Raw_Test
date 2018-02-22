@@ -117,7 +117,7 @@ class Denoiser:
         logging.info("Calculating filtered image")
         # balls, pixels_center = get_all_balls_image(image, patch_radius)
 
-        # obtain all possible reelative shifts of locations of a pixel's neighbor patches
+        # obtain all possible relative shifts of locations of a pixel's neighbor patches
         num_balls = 2* self.num_balls_per_direction + 1
         min_shift_y = - self.pattern_size[0] * self.num_balls_per_direction
         min_shift_x = - self.pattern_size[1] * self.num_balls_per_direction
@@ -191,8 +191,8 @@ class Denoiser:
             shifted_y = np.roll(square_differences, shift_y, 0)
             for shift_x in shifts:
                 if shift_x != 0:
-                    distances[shift_x:] += shifted_y[:-shift_x]
-                    distances[:shift_x] += shifted_y[-shift_x:]
+                    distances[:,shift_x:] += shifted_y[:,:-shift_x]
+                    distances[:,:shift_x] += shifted_y[:,-shift_x:]
                 else:
                     distances += shifted_y
 
