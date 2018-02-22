@@ -28,14 +28,14 @@ slice_denoise = None  #  comment this line to use slice instead of filtering of 
 
 # paths to input raw image and desired output
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_2.RAF"
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_6.RAF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji/Gruen.RAF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Olympus_1600.ORF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Fuji_2_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Fuji_3_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 # path to the camera profile generated with profile_camera.py
-path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_T10_3200.csv"
+path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_T10_200.csv"
 # path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40_1600.csv"
 
 # read raw image
