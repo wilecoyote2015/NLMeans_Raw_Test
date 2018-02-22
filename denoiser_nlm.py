@@ -47,7 +47,7 @@ class Denoiser:
         self.pattern_size = np.asarray(image_raw.raw_pattern.shape)
 
         # copy the image
-        image_data = image_raw.raw_image
+        image_data = image_raw.raw_image_visible
 
         # clean NANs
         image_data[np.isnan(image_data)] = 0.
@@ -74,7 +74,7 @@ class Denoiser:
         image_data_filtered_backtransformed = self.ascombe_transform_data(image_data_transformed, image_raw, inverse=True)
 
         # write filtered data into image
-        image_raw.raw_image[...] = image_data_filtered_backtransformed.astype(np.uint16)
+        image_raw.raw_image_visible[...] = image_data_filtered_backtransformed.astype(np.uint16)
 
         # reset patter size
         self.pattern_size = pattern_size_old
@@ -90,20 +90,35 @@ class Denoiser:
         :return:
         """
         raw_pattern = image_raw.raw_pattern
-        color_indices = image_raw.raw_colors
+        color_indices = image_raw.raw_colors_visible
         image_data_transformed = np.zeros_like(image_data)
         for color_index in raw_pattern.flatten():
             alpha = self.parameters_camera[color_index]['alpha']
             beta = self.parameters_camera[color_index]['beta']
-            pixels_color = [color_indices == color_index]
+            pixels_color = color_indices == color_index
+
+            # sometimes it seems that  image data has different shape than colors (bug in rawpy?)
+            # for now, simply omit pixels missing to the right and hope that this doesn't misalign color matrix
+
+            if pixels_color.shape != image_data_transformed.shape:
+                slice_relevant = np.s_[:pixels_color.shape[0], :pixels_color.shape[1]]
+                relevant_transformed = image_data_transformed[slice_relevant]
+                relevant_image = image_data[slice_relevant]
+            else:
+                relevant_transformed = image_data_transformed
+                relevant_image = image_data
+
             if inverse:
-                image_data_transformed[pixels_color] = inverse_ascombe_transform_scale(image_data[pixels_color],
+                relevant_transformed[pixels_color] = inverse_ascombe_transform_scale(relevant_image[pixels_color],
                                                                                alpha,
                                                                                beta)
             else:
-                image_data_transformed[pixels_color] = ascombe_transform_scale(image_data[pixels_color],
+                relevant_transformed[pixels_color] = ascombe_transform_scale(relevant_image[pixels_color],
                                                                    alpha,
                                                                    beta)
+
+        # fix values that were invalid in anscombe transform
+        image_data_transformed[np.isnan(image_data_transformed)] = 0.
 
         return image_data_transformed
 

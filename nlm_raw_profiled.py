@@ -6,7 +6,7 @@ from denoiser_nlm import Denoiser
 # settings
 num_cores = 4  # cores for multiprocessing
 patch_radius = 4  # radius of patches. patch width is 2*radius+1
-h = 1.1  # Scale parameter for exponential weight from patch distance. Higher value corresponds to smoother image.
+h = 1  # Scale parameter for exponential weight from patch distance. Higher value corresponds to smoother image. 1.1 seems good
 rotate_patches = True  # not used
 
 # Number of patches to search around each pixel in each direction (l, r, u, d).
@@ -15,8 +15,8 @@ num_balls_per_direction = 10
 
 # slice to define region of interest to process. for quick experimenting
 slice_width = 300
-slice_center_x = 900
-slice_center_y = 1300
+slice_center_x = 2000
+slice_center_y = 1500
 
 x_min = int (slice_center_x - slice_width/2)
 x_max = int (slice_center_x + slice_width/2)
@@ -27,13 +27,16 @@ slice_denoise = np.s_[y_min:y_max, x_min:x_max]
 slice_denoise = None  #  comment this line to use slice instead of filtering of whole image
 
 # paths to input raw image and desired output
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
+# path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_2.RAF"
+# path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji/Gruen.RAF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Olympus_1600.ORF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Nikon_2_full_linear_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Fuji_2_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 # path to the camera profile generated with profile_camera.py
-path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40.csv"
+path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_T10_3200.csv"
+# path_profile = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/results/profile_D40_1600.csv"
 
 # read raw image
 image_raw = rawpy.imread(path_input)

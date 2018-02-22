@@ -157,7 +157,8 @@ class Profiler:
                 patch = self.get_patch_around_pixel(color_plane, index_y, index_x)
 
                 # only proceed if patch does not contain the max value of the plane, which would indicate clipping
-                if np.amax(patch) < max_value and np.amin(patch) > min_value:
+                # and if there are no invalid pixels
+                if np.amax(patch) < max_value and np.amin(patch) > min_value and not np.isnan(patch).any():
                     standard_deviation = restoration.estimate_sigma(patch)
                     mean = np.mean(patch)
 
