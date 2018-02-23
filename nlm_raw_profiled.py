@@ -4,7 +4,7 @@ import rawpy
 from denoiser_nlm import Denoiser
 
 # settings
-num_cores = 4  # cores for multiprocessing
+num_cores = 2  # cores for multiprocessing
 patch_radius = 4  # radius of patches. patch width is 2*radius+1
 h = 1  # Scale parameter for exponential weight from patch distance. Higher value corresponds to smoother image. 1.1 seems good
 rotate_patches = True  # not used
@@ -15,8 +15,8 @@ num_balls_per_direction = 10
 
 # slice to define region of interest to process. for quick experimenting
 slice_width = 300
-slice_center_x = 2000
-slice_center_y = 1500
+slice_center_x = 1500
+slice_center_y = 3000
 
 x_min = int (slice_center_x - slice_width/2)
 x_max = int (slice_center_x + slice_width/2)
@@ -28,10 +28,10 @@ slice_denoise = None  #  comment this line to use slice instead of filtering of 
 
 # paths to input raw image and desired output
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/nikon_2.NEF"
-path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_6.RAF"
+path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji_5.RAF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Fuji/Gruen.RAF"
 # path_input = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/Olympus_1600.ORF"
-path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Fuji_3_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
+path_output = "/run/media/bjoern/daten/Programming/Raw_NLM_Denoise/images/denoised_images/Fuji_5_full_pd{}_pr{}_h{}.png".format(num_balls_per_direction,
                                                                                                                                  patch_radius,
                                                                                                                                  h)
 # path to the camera profile generated with profile_camera.py
