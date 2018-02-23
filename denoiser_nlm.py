@@ -74,7 +74,7 @@ class Denoiser:
         image_data_filtered_backtransformed = self.ascombe_transform_data(image_data_transformed, image_raw, inverse=True)
 
         # write filtered data into image
-        image_raw.raw_image_visible[...] = image_data_filtered_backtransformed.astype(np.uint16)
+        image_raw.raw_image_visible[...] = np.round(image_data_filtered_backtransformed).astype(np.uint16)
 
         # reset patter size
         self.pattern_size = pattern_size_old
